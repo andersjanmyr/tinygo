@@ -49,12 +49,22 @@ func TestCompiler(t *testing.T) {
 		{"goroutine.go", "cortex-m-qemu", "tasks"},
 		{"channel.go", "", ""},
 		{"gc.go", "", ""},
+		{"goasm.go", "linux/amd64", ""},
 	}
 	if goMinor >= 17 {
 		tests = append(tests, testCase{"go1.17.go", "", ""})
 	}
 	if goMinor >= 18 {
 		tests = append(tests, testCase{"generics.go", "", ""})
+	}
+
+	// For the goasm.go test.
+	goAsmReferences := map[string]string{
+		"main.AsmSqrt":         "__GoABI0_main.AsmSqrt",
+		"main.AsmAdd":          "__GoABI0_main.AsmAdd",
+		"main.AsmFoo":          "__GoABI0_main.AsmFoo",
+		"main.asmExport":       "__GoABI0_main.asmExport",
+		"main.asmGlobalExport": "__GoABI0_main.asmGlobalExport",
 	}
 
 	for _, tc := range tests {
@@ -69,8 +79,13 @@ func TestCompiler(t *testing.T) {
 		}
 
 		t.Run(name, func(t *testing.T) {
-			options := &compileopts.Options{
-				Target: targetString,
+			options := &compileopts.Options{}
+			if strings.Contains(targetString, "/") {
+				parts := strings.Split(targetString, "/")
+				options.GOOS = parts[0]
+				options.GOARCH = parts[1]
+			} else {
+				options.Target = targetString
 			}
 			target, err := compileopts.LoadTarget(options)
 			if err != nil {
@@ -116,7 +131,7 @@ func TestCompiler(t *testing.T) {
 			// Compile AST to IR.
 			program := lprogram.LoadSSA()
 			pkg := lprogram.MainPkg()
-			mod, errs := CompilePackage(tc.file, pkg, program.Package(pkg.Pkg), machine, compilerConfig, false)
+			mod, errs := CompilePackage(tc.file, pkg, program.Package(pkg.Pkg), machine, compilerConfig, goAsmReferences, false)
 			if errs != nil {
 				for _, err := range errs {
 					t.Error(err)
@@ -141,7 +156,7 @@ func TestCompiler(t *testing.T) {
 
 			outFilePrefix := tc.file[:len(tc.file)-3]
 			if tc.target != "" {
-				outFilePrefix += "-" + tc.target
+				outFilePrefix += "-" + strings.ReplaceAll(tc.target, "/", "_")
 			}
 			if tc.scheduler != "" {
 				outFilePrefix += "-" + tc.scheduler

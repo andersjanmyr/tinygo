@@ -337,6 +337,7 @@ TEST_PACKAGES_LINUX := \
 	archive/zip \
 	compress/flate \
 	compress/lzw \
+	crypto/aes \
 	crypto/hmac \
 	debug/dwarf \
 	debug/plan9obj \

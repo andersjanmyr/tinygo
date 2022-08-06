@@ -87,3 +87,11 @@ func LockOSThread() {
 // Stub for now
 func UnlockOSThread() {
 }
+
+//export __GoABI0_runtime.entersyscall
+func entersyscall() {
+}
+
+//export __GoABI0_runtime.exitsyscall
+func exitsyscall() {
+}
