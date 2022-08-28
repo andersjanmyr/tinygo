@@ -28,12 +28,6 @@ type testCase struct {
 func TestCompiler(t *testing.T) {
 	t.Parallel()
 
-	// Determine LLVM version.
-	llvmMajor, err := strconv.Atoi(strings.SplitN(llvm.Version, ".", 2)[0])
-	if err != nil {
-		t.Fatal("could not parse LLVM version:", llvm.Version)
-	}
-
 	// Determine Go minor version (e.g. 16 in go1.16.3).
 	_, goMinor, err := goenv.GetGorootVersion(goenv.Get("GOROOT"))
 	if err != nil {
@@ -54,13 +48,7 @@ func TestCompiler(t *testing.T) {
 		{"goroutine.go", "wasm", "asyncify"},
 		{"goroutine.go", "cortex-m-qemu", "tasks"},
 		{"channel.go", "", ""},
-		{"intrinsics.go", "cortex-m-qemu", ""},
-		{"intrinsics.go", "wasm", ""},
 		{"gc.go", "", ""},
-	}
-	if llvmMajor >= 12 {
-		tests = append(tests, testCase{"intrinsics.go", "cortex-m-qemu", ""})
-		tests = append(tests, testCase{"intrinsics.go", "wasm", ""})
 	}
 	if goMinor >= 17 {
 		tests = append(tests, testCase{"go1.17.go", "", ""})
